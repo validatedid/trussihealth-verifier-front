@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: universal-verifier-back-deployment
+  labels:
+    app: universal-verifier-back
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: universal-verifier-back
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: universal-verifier-back
+    spec:
+      containers:
+        - image: k8scrvidchaindev.azurecr.io/universal-verifier-back:latest
+          imagePullPolicy: 'Always'
+          name: universal-verifier-back
+          ports:
+            - containerPort: 8070
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: PORT
+            - name: BASE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: BASE_PATH
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: ENVIRONMENT
+            - name: FRONTEND_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: FRONTEND_BASE_URL
+            - name: OPENID_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: OPENID_URL
+            - name: OPENID_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: OPENID_CLIENT_ID
+            - name: VIDCHAIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: VIDCHAIN_URL
+            - name: VIDCHAIN_ISS
+              valueFrom:
+                configMapKeyRef:
+                  name: universal-verifier-back-configmap
+                  key: VIDCHAIN_ISS
+            - name: OPENID_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: universal-verifier-openid-secret
+                  key: openid-client-secret
+            - name: VIDCHAIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: universal-verifier-vidchain-apikey
+                  key: vidchain-api-key
+
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: universal-verifier-back-service
+  labels:
+    app: universal-verifier-back
+spec:
+  type: ClusterIP
+  ports:
+    - name: '8070'
+      port: 8070
+  selector:
+    app: universal-verifier-back
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: universal-verifier-back-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    rewrite-target: /universal-verifier
+spec:
+  tls:
+  - hosts:
+    - dev-verifier.vidchain.net
+    secretName: wildcard-vidchain-net
+  rules:
+  - host: dev-verifier.vidchain.net
+    http:
+      paths: 
+      - path: /universal-verifier
+        pathType: Prefix
+        backend:
+          service: 
+            name: universal-verifier-back-service
+            port: 
+              number: 8070

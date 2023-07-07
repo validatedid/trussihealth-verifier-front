@@ -1,0 +1,132 @@
+trigger:
+  branches:
+    include:
+      - development
+  paths:
+    include:
+      - universal-verifier-front
+
+pr: none
+
+resources:
+- repo: self
+
+variables:
+  # Docker Buildkit improves image build performance
+  DOCKER_BUILDKIT: 1
+  # Image repository
+  vidUniversalVerifierFrontendRepo: 'universal-verifier-front'
+  vidUniversalVerifierFrontendRepoEndpoint: 'k8scrvidchaindev.azurecr.io/$(vidUniversalVerifierFrontendRepo)'
+  # Repository directory
+  dir: 'universal-verifier-front'
+  # Dockerfiles
+  vidUniversalVerifierFrontendDocker: '$(dir)/Dockerfile'
+  # Kubernetes YAML
+  vidUniversalVerifierFrontendKubernetes: '$(dir)/k8s/k8s-dev.yml'
+  # package.json
+  packageJson: '$(dir)/package.json'
+  # coverage tests directory
+  coverage: '$(dir)/coverage'
+  # run unit test: true/false
+  runUnitTests: 'false'
+  # test run title
+  testRunName: '[dev] universal-verifier-front unit tests'
+  # Kubernetes namespace
+  namespace: 'development'
+  # Image tagging: application version - build
+  tagVIDUniversalVerifierFrontend: '$(Build.BuildNumber)'
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+  
+stages:
+- stage: UnitTests
+  displayName: 'Unit test stage'
+  jobs:
+  - job: GetPackageVersion
+    displayName: 'Retrieve package.json version to update build number'
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '12.x'
+        displayName: 'Use node'
+      - script: |
+          npmVersionString=$(node -p "require('./$(packageJson)').version")
+          commit=$(Build.SourceVersion)
+          shortCommit=${commit:0:7}
+          echo "##vso[build.updatebuildnumber]$npmVersionString-commit.$shortCommit"
+        displayName: 'retrieve $(packageJson) version'
+- stage: Build
+  displayName: 'Build stage'
+  jobs:
+  - job: GetShortCommit
+    displayName: 'retrieve commit hash'
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - script: |
+        commit=$(Build.SourceVersion)
+        shortCommit=${commit:0:7}
+        echo "##vso[build.updatebuildnumber]$(Build.BuildId)-commit.$shortCommit"
+      displayName: 'retrieve $(packageJson) version'
+  - job: BuildVIDUniversalVerifierFrontend
+    displayName: 'Build VIDUniversalVerifier Frontend'
+    dependsOn: GetShortCommit
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - bash: |
+        cp $(dir)/envs/.env.development $(dir)/.env
+      name: load_env_variables_file
+      displayName: 'load env vars'
+    - task: Docker@2
+      displayName: Login ACR
+      inputs:
+        command: login
+        containerRegistry: $(dockerRegistryServiceConnection)
+    - script: "docker pull $(vidUniversalVerifierFrontendRepoEndpoint):latest"
+      displayName: Pull latest for layer caching
+      continueOnError: true # for first build, no cache
+    - task: Docker@2
+      displayName: "build --cache-from=$(vidUniversalVerifierFrontendRepoEndpoint):latest"
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(vidUniversalVerifierFrontendRepo)'
+        command: 'build'
+        Dockerfile: $(vidUniversalVerifierFrontendDocker)
+        arguments: '--cache-from=$(vidUniversalVerifierFrontendRepoEndpoint):latest' 
+        tags: |
+          $(tagVIDUniversalVerifierFrontend)
+          latest
+    - task: Docker@2
+      displayName: "push"
+      inputs:
+        command: push
+        containerRegistry: "$(dockerRegistryServiceConnection)"
+        repository: $(vidUniversalVerifierFrontendRepo) 
+        tags: |
+          $(tagVIDUniversalVerifierFrontend)
+          latest        
+- stage: Deploy
+  displayName: 'Deploy stage'
+  dependsOn: Build
+  jobs:
+  - deployment: DeployVIDUniversalVerifierFrontend
+    displayName: 'Deploy VIDUniversalVerifier Frontend'
+    pool:
+      vmImage: $(vmImageName)
+    environment: 'development'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: KubernetesManifest@0
+            displayName: Create/update deployment
+            inputs:              
+              kubernetesServiceConnection: $(kubernetesServiceConnection)
+              namespace: $(namespace)
+              manifests: $(vidUniversalVerifierFrontendKubernetes)
+              containers: |
+                $(vidUniversalVerifierFrontendRepoEndpoint):$(tagVIDUniversalVerifierFrontend)

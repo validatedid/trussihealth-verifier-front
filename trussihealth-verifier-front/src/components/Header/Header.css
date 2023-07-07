@@ -1,0 +1,78 @@
+.logoHeader {
+    width: 150px;
+    height: 36px;
+}
+
+.headerBackground {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1640px;
+    margin: auto;
+    padding-inline: 20px;
+    height: 7rem;
+}
+
+.sloganHeader {
+    max-height: 4rem;
+    text-align: end;
+    white-space: nowrap;
+}
+.languageSelector {
+    max-height: 4rem;
+    text-align: end;
+    white-space: nowrap;
+}
+
+.powered {
+    color: black;
+    white-space: nowrap;
+}
+
+@media only screen and (max-width: 768px) {
+    .headerBackground {
+            width: 100%;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: auto;
+            height: 5rem;
+        }
+    
+        .sloganHeader {
+        display: none;
+    }
+
+    .logoHeader {
+        position: relative;
+        height: 43px;
+        margin-left: 2rem;
+        width: 170px;
+    }
+}
+
+/* Tablet */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+    .headerBackground {
+            width: 100%;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: auto;
+            height: 5rem;
+        }
+    .logoHeader {
+        position: relative;
+        height: 43px;
+        margin-left: 2rem;
+        width: 170px;
+    }
+    
+
+.sloganHeader {
+        display: none;
+    }
+}
