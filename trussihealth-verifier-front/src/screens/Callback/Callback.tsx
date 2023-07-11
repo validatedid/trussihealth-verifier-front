@@ -9,6 +9,7 @@ import { authLogin } from "../../services/vidcredentials";
 import CredentialPanel from "../Credentials/CredentialPanel";
 import IssuerPanel from "../Credentials/IssuerPanel";
 import SubjectPanel from "../Credentials/SubjectPanel";
+import HealthPanel from "../Credentials/HealthPanel";
 import "./Callback.css";
 
 function Callback() {
@@ -129,6 +130,10 @@ function Callback() {
                       label={I18n.t("global.subjectLabel")}
                       {...indexProps(2)}
                     />
+                    <Tab
+                        label={I18n.t("global.healthLabel")}
+                        {...indexProps(3)}
+                    />
                   </Tabs>
                 </Grid>
                 <TabPanel value={value} index={0}>
@@ -139,6 +144,9 @@ function Callback() {
                 </TabPanel>
                 <TabPanel value={value} index={2}>
                   <SubjectPanel index={2} verifiableCredential={credentialData} />
+                </TabPanel>
+                <TabPanel value={value} index={3}>
+                  <HealthPanel index={3} verifiableCredential={credentialData} />
                 </TabPanel>
               </Grid>
             </Grid>

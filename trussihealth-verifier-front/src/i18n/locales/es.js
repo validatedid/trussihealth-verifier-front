@@ -12,6 +12,7 @@ export default {
     subjectLabel: "Contenido",
     credentialTitle: "Detalles de la credencial",
     notAvailable: "No disponible",
+    healthLabel: "Salud"
   },
   credential: {
     status: "Estado",
