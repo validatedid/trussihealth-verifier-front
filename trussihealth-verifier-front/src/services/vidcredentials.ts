@@ -20,11 +20,13 @@ export interface BackendResponse {
 }
 
 function translateBackendError(error: BackendError): ParsedBackendError {
-  console.log(error, error.message);
-  const parsedError = {
+  if (error)
+    console.log(error, error.message);
+
+  const parsedError = error ?{
     title: I18n.t(error.internalCode),
-    details: error.message.split("]")[1],
-  };
+    details: error.message ? error.message.split("]")[1] : "",
+  } : {title: "Error", details: "Error"};
   return parsedError;
 }
 
@@ -100,4 +102,33 @@ async function verifyValidCredential(
   }
 }
 
-export { authLogin, validateEidasSeal, verifyValidCredential };
+
+async function getHealthData(
+    documentId: string
+) {
+  try {
+    const url = `${BACKEND.ENDPOINTS.HEALTHDATA}/${documentId}`;
+
+    const response = await axios.get(url,{
+      auth: {
+        username: "trussihealth",
+        password: "98JVnqrLUwczhHGu"
+      }});
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error(`${"error de login"} ${response.data}.`);
+    }
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const parsedError = translateBackendError(
+          error.response?.data as BackendError
+      );
+      return { error: parsedError };
+    }
+    return { error: { title: "Unknown" } };
+  }
+}
+
+
+
+export { authLogin, validateEidasSeal, verifyValidCredential, getHealthData };

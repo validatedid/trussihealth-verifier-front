@@ -14,6 +14,13 @@ export default {
     notAvailable: "No disponible",
     healthLabel: "Salud"
   },
+  health: {
+    patient: "Paciente",
+    onsetDateTime: "Fecha",
+    recordedDate: "Fecha de alta",
+    note: "Anotación",
+    data: "Datos"
+  },
   credential: {
     status: "Estado",
     type: "Tipo",

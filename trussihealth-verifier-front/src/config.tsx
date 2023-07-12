@@ -6,10 +6,13 @@ const OPENID = {
 };
 
 const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+const IDENTITY_URL = process.env.REACT_APP_IDENTITY_PROVIDER
 const BACKEND_ENDPOINTS = {
   AUTHORIZE: `${BACKEND_BASE_URL}/authorize`,
   VALIDATE: `${BACKEND_BASE_URL}/validate`,
   REVOKED: `${BACKEND_BASE_URL}/revoked`,
+    HEALTHDATA: `${BACKEND_BASE_URL}/health-data`
+
 };
 const BACKEND ={
     BASE_URL: BACKEND_BASE_URL,

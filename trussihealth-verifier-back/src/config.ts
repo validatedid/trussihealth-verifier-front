@@ -15,10 +15,13 @@ const FRONTEND_BASE_URL = checkStrVar(
 
 const BASE_PATH = checkStrVar(process.env.BASE_PATH, 'BASE_PATH');
 
+const BASIC_AUTH = process.env.OPENID_BASIC_AUTH;
+
 const BACKEND_PATHS = {
   AUTHORIZE: '/authorize',
   VALIDATE: '/validate',
   REVOKED: '/revoked/statusList/:statusListId/credentialId/:credentialId',
+  HEALTH: '/health-data/:documentId',
 };
 const SERVICE = {
   PORT,
@@ -42,4 +45,4 @@ const VIDCHAIN = {
   ISS: checkStrVar(process.env.VIDCHAIN_ISS, 'VIDCHAIN_ISS'),
 };
 
-export { SERVICE, OPENID, VIDCHAIN };
+export { SERVICE, OPENID, VIDCHAIN, BASIC_AUTH };

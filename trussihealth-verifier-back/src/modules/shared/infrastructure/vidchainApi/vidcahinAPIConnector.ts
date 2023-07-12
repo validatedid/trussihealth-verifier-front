@@ -20,6 +20,7 @@ interface AuthorizationHeaders {
 export class VIDchainAPIConnector {
   constructor(
     @Inject('VIDchainAPIUrl') private readonly vidchainAPIUrl: string,
+    @Inject('OpenIdAPIUrl') private readonly openIdAPIUrl: string,
   ) {}
 
   async sessions(sessionsBody: unknown): Promise<VIDchainSessionsResponse> {
@@ -55,6 +56,22 @@ export class VIDchainAPIConnector {
     try {
       const response = await axios.get(
         `${this.vidchainAPIUrl}/revocation/credential-status/status-list/${statusListId}/credential/${credentialId}`,
+        authorization,
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  async getData(
+    documentId: string,
+    authorization: AuthorizationHeaders,
+  ): Promise<unknown> {
+    try {
+      const response = await axios.get(
+        `${this.openIdAPIUrl}/health-data/${documentId}`,
         authorization,
       );
       return response.data;

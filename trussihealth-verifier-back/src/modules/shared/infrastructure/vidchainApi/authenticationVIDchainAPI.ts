@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { VIDchainAPIConnector } from './vidcahinAPIConnector';
 import { Inject } from '@nestjs/common';
-import { OpenIdConfig } from '../openIdAPI';
+import { BASIC_AUTH } from '../../../../config';
 
 interface AuthorizationHeaders {
   headers: {
@@ -66,6 +66,16 @@ export class AuthenticationVIDchainAPI {
     return {
       headers: {
         Authorization: `Bearer ${await this.getAuthorizationToken()}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    };
+  }
+
+  protected async getAuthorizationBasic(): Promise<AuthorizationHeaders> {
+    return {
+      headers: {
+        Authorization: `Basic ${BASIC_AUTH}`,
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },

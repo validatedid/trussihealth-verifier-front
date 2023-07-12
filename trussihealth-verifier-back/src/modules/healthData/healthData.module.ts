@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CredentialStatusController } from './credentialStatus.controller';
-import { CredentialStatusService } from './credentialStatus.service';
-import { VIDCHAIN, OPENID } from '../../config';
+import { HealthDataController } from './healthData.controller';
+import { HealthDataService } from './healthData.service';
+import { OPENID, VIDCHAIN } from '../../config';
 import { EntityInfo } from '../shared/infrastructure/vidchainApi/authenticationVIDchainAPI';
 import { VIDchainAPIConnector } from '../shared/infrastructure/vidchainApi/vidcahinAPIConnector';
-import { RevocationStatus } from '../shared/infrastructure/vidchainApi/revocationStatus';
+import { HealthData } from '../shared/infrastructure/vidchainApi/healthData';
 
 const entityInfo = {
   provide: 'EntityInfo',
@@ -17,13 +17,6 @@ const entityInfo = {
   },
 };
 
-const openIdAPIUrl = {
-  provide: 'OpenIdAPIUrl',
-  useFactory: () => {
-    return OPENID.URL;
-  },
-};
-
 const vidchainAPIUrl = {
   provide: 'VIDchainAPIUrl',
   useFactory: () => {
@@ -31,16 +24,23 @@ const vidchainAPIUrl = {
   },
 };
 
+const openIdAPIUrl = {
+  provide: 'OpenIdAPIUrl',
+  useFactory: () => {
+    return OPENID.URL;
+  },
+};
+
 @Module({
   imports: [],
-  controllers: [CredentialStatusController],
+  controllers: [HealthDataController],
   providers: [
     entityInfo,
     vidchainAPIUrl,
     openIdAPIUrl,
-    RevocationStatus,
-    CredentialStatusService,
+    HealthData,
+    HealthDataService,
     VIDchainAPIConnector,
   ],
 })
-export class CredentialStatusModule {}
+export class HealthDataModule {}

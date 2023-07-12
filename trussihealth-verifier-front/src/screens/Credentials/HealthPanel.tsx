@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useEffect, useState } from "react";
 import { I18n } from "../../i18n/i18n";
-import { verifyValidCredential } from "../../services/vidcredentials";
+import { getHealthData } from "../../services/vidcredentials";
 import "./Panels.css";
 
 interface Props {
@@ -10,22 +10,44 @@ interface Props {
 }
 
 function HealthPanel(props: Props) {
+    let patient;
     const [data, setData] = useState({
-        type: [],
-        issuanceDate: "",
-        expirationDate: "",
+        patient: {reference: ""},
+        note: {text: ""},
+        recordedDate: "",
+        onsetDateTime: ""
     });
-    const [validityStatus, setValidityStatus] = useState("");
+    const [allData, setAllData] = useState();
+    const [isData, setIsData] = useState(false);
     const { verifiableCredential } = props;
     const { issuanceDate, type } = verifiableCredential;
 
+
+
     useEffect(() => {
-        if (data.type.length === 0) {
-            validCredential();
-            setData({ type, issuanceDate, expirationDate: "" });
-        }
+        if (!isData)
+            getData();
     }, []);
 
+    const getData = async () => {
+        const documentId = verifiableCredential.credentialSubject.documentId;
+        if (documentId) {
+            const userData = await getHealthData(documentId);
+            if (userData.base64data){
+                const jsonData = JSON.parse(userData.base64data);
+
+                setIsData(true);
+                setData(jsonData);
+                setAllData(jsonData);
+            }else{
+                setIsData(false);
+            }
+
+
+        } else {
+            setIsData(false);
+        }
+    };
     const formatDate = (date: string) => {
         if (!date) {
             return I18n.t("global.notAvailable");
@@ -33,50 +55,39 @@ function HealthPanel(props: Props) {
         const formattedDate = new Date(date);
         return formattedDate.toLocaleString();
     };
-
-    const validCredential = async () => {
-        const validity = verifiableCredential.credentialStatus;
-        if (validity) {
-            const arrUri = validity.id.split("/");
-            const credentialId = parseInt(arrUri[arrUri.length - 1]);
-            const statusListId = parseInt(arrUri[arrUri.length - 3]);
-            const valiationResponse = await verifyValidCredential(
-                statusListId,
-                credentialId
-            );
-            setValidityStatus(valiationResponse.revoked ? "Invalid" : "Valid");
-        } else {
-            setValidityStatus("Valid");
-        }
-    };
-
     return (
         <Grid container className="mainPanelContainer">
             <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("credential.status")}:</text>
-                <text>{validityStatus}</text>
-                <img
-                    className="check"
-                    src={require("../../assets/images/checkSuccess.png")}
-                    alt="success"
-                />
+                <text>{I18n.t("health.patient")}:</text>
+                <text>{ data.patient.reference }</text>
+
             </Grid>
             <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("credential.type")}:</text>
+                <text>{I18n.t("health.onsetDateTime")}:</text>
+                <text>{ formatDate(data.onsetDateTime) }</text>
+            </Grid>
+            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
+                <text>{I18n.t("health.recordedDate")}:</text>
+                <text>{ formatDate(data.recordedDate) }</text>
+            </Grid>
+            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
+                <text>{I18n.t("health.note")}:</text>
+                <text>{ data.note.text }</text>
+            </Grid>
+            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
+                <text>{I18n.t("health.data")}:</text>
                 <text>
-                    {data?.type.map((element: any, i: any) => {
-                        return element + (i === data.type.length - 1 ? "" : ", ");
+                    {allData && Object.keys(allData).map((key, index) => {
+                        return (
+                            <p key={key + index}>{key}: {JSON.stringify(allData[key])}</p>
+                        )
                     })}
+
                 </text>
             </Grid>
-            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("credential.issuanceDate")}:</text>
-                <text>{formatDate(data.issuanceDate)}</text>
-            </Grid>
-            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("credential.expirationDate")}:</text>
-                <text>{formatDate(verifiableCredential.expirationDate)}</text>
-            </Grid>
+
+
+
         </Grid>
     );
 }
