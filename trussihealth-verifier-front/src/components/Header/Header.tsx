@@ -10,7 +10,7 @@ function Header() {
         <Link to={"/"}>
           <img
             className="logoHeader"
-            src={require("../../assets/images/logoVC.png")}
+            src={require("../../assets/images/logotruss.jpg")}
             alt="Logo"
           />
         </Link>
