@@ -11,6 +11,7 @@ interface Props {
 
 function HealthPanel(props: Props) {
     let patient;
+    const [parsed, setParsed] = useState("");
     const [data, setData] = useState({
         patient: {reference: ""},
         note: {text: ""},
@@ -21,7 +22,6 @@ function HealthPanel(props: Props) {
     const [isData, setIsData] = useState(false);
     const { verifiableCredential } = props;
     const { issuanceDate, type } = verifiableCredential;
-
 
 
     useEffect(() => {
@@ -39,6 +39,7 @@ function HealthPanel(props: Props) {
                 setIsData(true);
                 setData(jsonData);
                 setAllData(jsonData);
+
             }else{
                 setIsData(false);
             }
@@ -55,6 +56,27 @@ function HealthPanel(props: Props) {
         const formattedDate = new Date(date);
         return formattedDate.toLocaleString();
     };
+
+
+    function renderWithKeys(item: any, level: number) {
+       let mLevel = 1;
+        if (level === 1){
+            mLevel = 2;
+        }else{
+            if (level === 2){
+                mLevel=3;
+            }
+        }
+
+        return Object.keys(item).map((key) => (
+            <div style={{marginLeft: mLevel * 6}}><strong>{ key + ": "}</strong>
+                {typeof item[key] === "object"
+                    ? renderWithKeys(item[key],mLevel)
+                    : item[key]}
+            </div>
+        ));
+    }
+
     return (
         <Grid container className="mainPanelContainer">
             <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
@@ -62,26 +84,21 @@ function HealthPanel(props: Props) {
                 <text>{ data.patient.reference }</text>
 
             </Grid>
-            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("health.onsetDateTime")}:</text>
-                <text>{ formatDate(data.onsetDateTime) }</text>
-            </Grid>
-            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("health.recordedDate")}:</text>
-                <text>{ formatDate(data.recordedDate) }</text>
-            </Grid>
-            <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
-                <text>{I18n.t("health.note")}:</text>
-                <text>{ data.note.text }</text>
-            </Grid>
+
             <Grid item xs={12} sm={12} md={12} lg={12} className="fieldContainer">
                 <text>{I18n.t("health.data")}:</text>
+
                 <text>
-                    {allData && Object.keys(allData).map((key, index) => {
-                        return (
-                            <p key={key + index}>{key}: {JSON.stringify(allData[key])}</p>
-                        )
-                    })}
+
+                    {allData &&
+                        Object.keys(allData).map((key) => (
+                            <div><strong>{"" + key + ": "}</strong>
+                                {typeof allData[key] === "object"
+                                    ? renderWithKeys(allData[key],1)
+                                    : allData[key]}
+                            </div>
+                        ))
+                    }
 
                 </text>
             </Grid>
