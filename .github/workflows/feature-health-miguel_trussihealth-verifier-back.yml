@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - feature/health-miguel
+    paths:
+      - 'trussihealth-verifier-back/*'
   workflow_dispatch:
 
 jobs:
