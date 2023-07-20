@@ -10,7 +10,8 @@ on:
     paths:
       - 'trussihealth-verifier-back/*'
   workflow_dispatch:
-
+env:
+  CI: false
 jobs:
   build:
     runs-on: ubuntu-latest
