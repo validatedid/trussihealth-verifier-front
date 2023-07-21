@@ -1,4 +1,5 @@
+.env
 #WebStorm
 .idea/*
 #Visual Studio
-universal-verifier-front/.vscode/*
+trussihealth-verifier-front/.vscode/*
