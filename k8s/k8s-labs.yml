@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trussihealth-verifier-front-deployment
+  labels:
+    app: trussihealth-verifier-front
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: trussihealth-verifier-front
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: trussihealth-verifier-front
+    spec:
+      containers:
+        - image: k8scrvidchainlabs.azurecr.io/trussihealth-verifier-front:latest
+          imagePullPolicy: "Always"
+          name: trussihealth-verifier-front
+          ports:
+            - containerPort: 3000
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: trussihealth-verifier-front-service
+  labels:
+    app: trussihealth-verifier-front
+spec:
+  type: ClusterIP
+  ports:
+    - name: "3051"
+      port: 3051
+      targetPort: 3000
+  selector:
+    app: trussihealth-verifier-front
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trussihealth-verifier-front-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+    - hosts:
+      - trussihealth-verifier.vidchain.net
+      secretName: wildcard-vidchain-net
+  rules:
+    - host: trussihealth-verifier.vidchain.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: trussihealth-verifier-front-service
+                port:
+                  number: 3051
+          - path: /callback(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: trussihealth-verifier-front-service
+                port:
+                  number: 3051

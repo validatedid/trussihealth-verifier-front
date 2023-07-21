@@ -1,0 +1,107 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+resources:
+- repo: self
+
+variables:
+  # Docker Buildkit improves image build performance
+  DOCKER_BUILDKIT: 1
+  # Image repository
+  trussiHealthVerifierFrontendRepo: 'trussihealth-verifier-front'
+  trussiHealthVerifierFrontendRepoEndpoint: 'k8scrvidchainlabs.azurecr.io/$(trussiHealthVerifierFrontendRepo)'
+  # Repository directory
+  dir: 'trussihealth-verifier-front'
+  # Dockerfiles
+  trussiHealthVerifierFrontendDocker: '$(dir)/Dockerfile'
+  # Kubernetes YAML
+  trussiHealthVerifierFrontendKubernetes: '$(dir)/k8s/k8s-labs.yml'
+  # package.json
+  packageJson: '$(dir)/package.json'
+  # coverage tests directory
+  coverage: '$(dir)/coverage'
+  # Kubernetes namespace
+  namespace: 'labs'
+  # Image tagging: application version - build
+  tagtrussiHealthVerifierFrontend: '$(Build.BuildNumber)'
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build stage'
+  jobs:
+  - job: GetShortCommit
+    displayName: 'retrieve commit hash'
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - script: |
+        commit=$(Build.SourceVersion)
+        shortCommit=${commit:0:7}
+        echo "##vso[build.updatebuildnumber]$(Build.BuildId)-commit.$shortCommit"
+      displayName: 'retrieve $(packageJson) version'
+  - job: BuildtrussiHealthVerifierFrontend
+    displayName: 'Build trussiHealthVerifier Frontend'
+    dependsOn: GetShortCommit
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - bash: |
+        cp $(dir)/envs/.env.labs $(dir)/.env
+      name: load_env_variables_file
+      displayName: 'load env vars'
+    - task: Docker@2
+      displayName: Login ACR
+      inputs:
+        command: login
+        containerRegistry: $(dockerRegistryServiceConnection)
+    - script: "docker pull $(trussiHealthVerifierFrontendRepoEndpoint):latest"
+      displayName: Pull latest for layer caching
+      continueOnError: true # for first build, no cache
+    - task: Docker@2
+      displayName: "build --cache-from=$(trussiHealthVerifierFrontendRepoEndpoint):latest"
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(trussiHealthVerifierFrontendRepo)'
+        command: 'build'
+        Dockerfile: $(trussiHealthVerifierFrontendDocker)
+        arguments: '--cache-from=$(trussiHealthVerifierFrontendRepoEndpoint):latest'
+        tags: |
+          $(tagtrussiHealthVerifierFrontend)
+          latest
+    - task: Docker@2
+      displayName: "push"
+      inputs:
+        command: push
+        containerRegistry: "$(dockerRegistryServiceConnection)"
+        repository: $(trussiHealthVerifierFrontendRepo)
+        tags: |
+          $(tagtrussiHealthVerifierFrontend)
+          latest
+- stage: Deploy
+  displayName: 'Deploy stage'
+  dependsOn: Build
+  jobs:
+  - deployment: DeploytrussiHealthVerifierFrontend
+    displayName: 'Deploy TrussiHealth Verifier Frontend'
+    pool:
+      vmImage: $(vmImageName)
+    environment: 'labs'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: KubernetesManifest@0
+            displayName: Create/update deployment
+            inputs:
+              kubernetesServiceConnection: $(kubernetesServiceConnection)
+              namespace: $(namespace)
+              manifests: $(trussiHealthVerifierFrontendKubernetes)
+              containers: |
+                $(trussiHealthVerifierFrontendRepoEndpoint):$(tagtrussiHealthVerifierFrontend)
