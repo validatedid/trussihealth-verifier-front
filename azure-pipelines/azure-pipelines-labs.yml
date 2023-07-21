@@ -15,7 +15,7 @@ variables:
   trussiHealthVerifierFrontendRepo: 'trussihealth-verifier-front'
   trussiHealthVerifierFrontendRepoEndpoint: 'k8scrvidchainlabs.azurecr.io/$(trussiHealthVerifierFrontendRepo)'
   # Repository directory
-  dir: 'trussihealth-verifier-front'
+  dir: '.'
   # Dockerfiles
   trussiHealthVerifierFrontendDocker: '$(dir)/Dockerfile'
   # Kubernetes YAML
