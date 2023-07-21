@@ -85,7 +85,7 @@ function HealthPanel(props: Props) {
 
                     {allData &&
                         Object.keys(allData).map((key) => (
-                            <div><strong style={{ textTransform: "capitalize"}}>{"" + key + ": "}</strong>
+                            <div><strong style={{ textTransform: "capitalize", marginTop: 6}}>{"" + key + ": "}</strong>
                                 {typeof allData[key] === "object"
                                     ? renderWithKeys(allData[key],1)
                                     : allData[key]}
