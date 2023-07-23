@@ -33,7 +33,7 @@ h1 {
 .mainWrap {
     display: flex;
     height: auto;
-    max-height: 700px;
+    max-height: 850px;
     flex-direction: row;
     width: 95% !important;
     border-radius: 6px;

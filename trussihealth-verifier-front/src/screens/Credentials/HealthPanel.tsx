@@ -62,7 +62,7 @@ function HealthPanel(props: Props) {
        let mLevel = level + 1;
 
         return Object.keys(item).map((key) => (
-            <div style={{marginLeft: mLevel * 6}}><strong style={{ textTransform: "capitalize"}} >{ key + ": "}</strong>
+            <div style={{marginTop: 5, marginLeft: mLevel * 6}}><strong style={{ textTransform: "capitalize"}} >{ key + ": "}</strong>
                 {typeof item[key] === "object"
                     ? renderWithKeys(item[key],mLevel)
                     : item[key]}
@@ -85,7 +85,7 @@ function HealthPanel(props: Props) {
 
                     {allData &&
                         Object.keys(allData).map((key) => (
-                            <div><strong style={{ textTransform: "capitalize", marginTop: 6}}>{"" + key + ": "}</strong>
+                            <div style={{marginLeft: 5, marginTop: 8}}><strong style={{ textTransform: "capitalize"}}>{"" + key + ": "}</strong>
                                 {typeof allData[key] === "object"
                                     ? renderWithKeys(allData[key],1)
                                     : allData[key]}
